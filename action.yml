@@ -2,7 +2,7 @@ name: "Award RTC on merged PR"
 description: "Reusable GitHub Action to award RTC tokens when a pull request is merged"
 inputs:
   node-url:
-    description: "RustChain node URL (e.g. https://50.28.86.131)"
+    description: "RustChain node URL (e.g. https://node.example.com)"
     required: true
   amount:
     description: "Amount of RTC to transfer"
