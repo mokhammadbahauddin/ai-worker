@@ -135,7 +135,7 @@ def main() -> int:
 
     if dry_run:
         message = (
-            f"🧪 Dry run: would transfer {amount} RTC from `{wallet_from}` "
+            f"🧪 Dry run: would transfer {amount} RTC "
             f"to `{wallet_to}` via `{node_url}`."
         )
         post_pr_comment(repository, int(pr_number), github_token, message)
@@ -145,7 +145,7 @@ def main() -> int:
     try:
         status, _ = transfer_rtc(node_url, wallet_from, wallet_to, amount, admin_key)
         message = (
-            f"✅ RTC reward sent: transferred {amount} RTC from `{wallet_from}` "
+            f"✅ RTC reward sent: transferred {amount} RTC "
             f"to `{wallet_to}` (status: {status})."
         )
         post_pr_comment(repository, int(pr_number), github_token, message)
@@ -153,7 +153,8 @@ def main() -> int:
         return 0
     except RuntimeError as err:
         failure_message = (
-            f"❌ RTC reward transfer failed for `{wallet_to}`: {err}."
+            f"❌ RTC reward transfer failed for `{wallet_to}`. "
+            "Please check node availability and credentials."
         )
         post_pr_comment(repository, int(pr_number), github_token, failure_message)
         print(f"Transfer failed: {err}")
