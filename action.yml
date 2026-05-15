@@ -1,0 +1,32 @@
+name: "Award RTC on merged PR"
+description: "Reusable GitHub Action to award RTC tokens when a pull request is merged"
+inputs:
+  node-url:
+    description: "RustChain node URL (e.g. https://node.example.com)"
+    required: true
+  amount:
+    description: "Amount of RTC to transfer"
+    required: true
+  wallet-from:
+    description: "Sender wallet name"
+    required: true
+  admin-key:
+    description: "Admin key used to authorize RTC transfer"
+    required: true
+  dry-run:
+    description: "When true, simulate transfer and only post dry-run comment"
+    required: false
+    default: "false"
+runs:
+  using: "composite"
+  steps:
+    - name: Award RTC
+      shell: bash
+      env:
+        INPUT_NODE_URL: ${{ inputs.node-url }}
+        INPUT_AMOUNT: ${{ inputs.amount }}
+        INPUT_WALLET_FROM: ${{ inputs.wallet-from }}
+        INPUT_ADMIN_KEY: ${{ inputs.admin-key }}
+        INPUT_DRY_RUN: ${{ inputs.dry-run }}
+        GITHUB_TOKEN: ${{ github.token }}
+      run: python $GITHUB_ACTION_PATH/rtc_award_action/main.py
