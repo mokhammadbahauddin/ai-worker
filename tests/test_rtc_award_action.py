@@ -3,7 +3,7 @@ import urllib.error
 from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from rtc_award_action.main import find_wallet_in_pr_body, github_api_request, parse_bool, read_wallet_file, transfer_rtc
 
@@ -70,6 +70,18 @@ class TestRtcAwardAction(unittest.TestCase):
         with patch("rtc_award_action.main.urllib.request.urlopen", side_effect=urllib.error.URLError("timeout")):
             with self.assertRaises(RuntimeError):
                 transfer_rtc("https://node.example", "from_wallet", "to_wallet", "20", "key")
+
+    def test_transfer_rtc_success(self):
+        mock_response = MagicMock()
+        mock_response.status = 200
+        mock_response.read.return_value = b'{"ok":true}'
+        mock_context = MagicMock()
+        mock_context.__enter__.return_value = mock_response
+
+        with patch("rtc_award_action.main.urllib.request.urlopen", return_value=mock_context):
+            status, body = transfer_rtc("https://node.example", "from_wallet", "to_wallet", "20", "key")
+            self.assertEqual(status, 200)
+            self.assertEqual(body, '{"ok":true}')
 
 
 if __name__ == "__main__":

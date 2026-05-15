@@ -6,7 +6,7 @@ import urllib.request
 from pathlib import Path
 
 
-MAX_TEXT_PREVIEW = 500
+MAX_ERROR_TEXT_LENGTH = 500
 RTC_ASSET = "RTC"
 
 WALLET_BODY_PATTERNS = [
@@ -59,7 +59,7 @@ def github_api_request(url: str, token: str, payload: dict) -> tuple[int, str]:
         with urllib.request.urlopen(req) as response:
             return response.status, response.read().decode("utf-8")
     except urllib.error.HTTPError as err:
-        error_text = err.read().decode("utf-8", errors="replace")[:MAX_TEXT_PREVIEW]
+        error_text = err.read().decode("utf-8", errors="replace")[:MAX_ERROR_TEXT_LENGTH]
         raise RuntimeError(f"GitHub API request failed with HTTP {err.code}: {error_text}") from err
     except urllib.error.URLError as err:
         raise RuntimeError(f"GitHub API request failed with network error: {err.reason}") from err
@@ -89,7 +89,7 @@ def transfer_rtc(node_url: str, wallet_from: str, wallet_to: str, amount: str, a
         with urllib.request.urlopen(req) as response:
             return response.status, response.read().decode("utf-8")
     except urllib.error.HTTPError as err:
-        error_text = err.read().decode("utf-8", errors="replace")[:MAX_TEXT_PREVIEW]
+        error_text = err.read().decode("utf-8", errors="replace")[:MAX_ERROR_TEXT_LENGTH]
         raise RuntimeError(f"RTC transfer failed with HTTP {err.code}: {error_text}") from err
     except urllib.error.URLError as err:
         raise RuntimeError(f"RTC transfer failed with network error: {err.reason}") from err
@@ -149,7 +149,7 @@ def main() -> int:
             f"to `{wallet_to}` (status: {status})."
         )
         post_pr_comment(repository, int(pr_number), github_token, message)
-        print(f"Transfer response status={status}")
+        print(f"Transfer successful: {amount} RTC to {wallet_to} (status={status})")
         return 0
     except RuntimeError as err:
         failure_message = (
