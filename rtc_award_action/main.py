@@ -7,6 +7,7 @@ from pathlib import Path
 
 
 MAX_TEXT_PREVIEW = 500
+RTC_ASSET = "RTC"
 
 WALLET_BODY_PATTERNS = [
     re.compile(r"^\s*(?:rtc[-_ ]wallet|wallet)\s*[:=]\s*`?([A-Za-z0-9_.-]+)`?\s*$", re.IGNORECASE | re.MULTILINE),
@@ -28,7 +29,10 @@ def find_wallet_in_pr_body(pr_body: str) -> str | None:
 
 
 def read_wallet_file(workspace: str) -> str | None:
-    wallet_file = Path(workspace) / ".rtc-wallet"
+    workspace_path = Path(workspace).resolve()
+    wallet_file = (workspace_path / ".rtc-wallet").resolve()
+    if wallet_file.parent != workspace_path:
+        return None
     if not wallet_file.exists() or not wallet_file.is_file():
         return None
 
@@ -73,7 +77,7 @@ def transfer_rtc(node_url: str, wallet_from: str, wallet_to: str, amount: str, a
         "to": wallet_to,
         "amount": amount,
         "admin_key": admin_key,
-        "asset": "RTC",
+        "asset": RTC_ASSET,
     }
     req = urllib.request.Request(
         url=url,
@@ -139,13 +143,13 @@ def main() -> int:
         return 0
 
     try:
-        status, body = transfer_rtc(node_url, wallet_from, wallet_to, amount, admin_key)
+        status, _ = transfer_rtc(node_url, wallet_from, wallet_to, amount, admin_key)
         message = (
             f"✅ RTC reward sent: transferred {amount} RTC from `{wallet_from}` "
             f"to `{wallet_to}` (status: {status})."
         )
         post_pr_comment(repository, int(pr_number), github_token, message)
-        print(f"Transfer response status={status}, body={body[:MAX_TEXT_PREVIEW]}")
+        print(f"Transfer response status={status}")
         return 0
     except RuntimeError as err:
         failure_message = (

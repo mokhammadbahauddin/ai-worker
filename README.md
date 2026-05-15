@@ -43,3 +43,5 @@ Caller workflow should grant permission to create PR comments:
 permissions:
   pull-requests: write
 ```
+
+The action uses the default `github.token` to post PR comments.
