@@ -11,7 +11,7 @@ class TestRtcAwardAction(unittest.TestCase):
         self.assertFalse(parse_bool("false"))
         self.assertFalse(parse_bool(""))
 
-    def test_find_wallet_in_pr_body_from_label(self):
+    def test_find_wallet_in_pr_body_with_standard_format(self):
         body = """
         ## Submission
         RTC Wallet: contributor_wallet-01
@@ -31,6 +31,25 @@ class TestRtcAwardAction(unittest.TestCase):
 
             result = read_wallet_file("/workspace")
             self.assertEqual(result, "file_wallet")
+
+    def test_read_wallet_file_missing(self):
+        with patch("rtc_award_action.main.Path") as mock_path:
+            wallet_file = mock_path.return_value.__truediv__.return_value
+            wallet_file.exists.return_value = False
+            wallet_file.is_file.return_value = False
+
+            result = read_wallet_file("/workspace")
+            self.assertIsNone(result)
+
+    def test_read_wallet_file_only_comments(self):
+        with patch("rtc_award_action.main.Path") as mock_path:
+            wallet_file = mock_path.return_value.__truediv__.return_value
+            wallet_file.exists.return_value = True
+            wallet_file.is_file.return_value = True
+            wallet_file.read_text.return_value = "# ignored\n\n# also ignored\n"
+
+            result = read_wallet_file("/workspace")
+            self.assertIsNone(result)
 
 
 if __name__ == "__main__":

@@ -49,8 +49,12 @@ def github_api_request(url: str, token: str, payload: dict) -> tuple[int, str]:
             "Content-Type": "application/json",
         },
     )
-    with urllib.request.urlopen(req) as response:
-        return response.status, response.read().decode("utf-8")
+    try:
+        with urllib.request.urlopen(req) as response:
+            return response.status, response.read().decode("utf-8")
+    except urllib.error.HTTPError as err:
+        error_text = err.read().decode("utf-8", errors="replace")[:500]
+        raise RuntimeError(f"GitHub API request failed with HTTP {err.code}: {error_text}") from err
 
 
 def post_pr_comment(repo: str, issue_number: int, token: str, message: str) -> None:
@@ -141,6 +145,13 @@ def main() -> int:
         )
         post_pr_comment(repository, int(pr_number), github_token, failure_message)
         print(f"Transfer failed HTTP {err.code}: {error_text}")
+        raise
+    except urllib.error.URLError as err:
+        failure_message = (
+            f"❌ RTC reward transfer failed for `{wallet_to}` due to network error: {err.reason}."
+        )
+        post_pr_comment(repository, int(pr_number), github_token, failure_message)
+        print(f"Transfer failed with network error: {err.reason}")
         raise
 
 

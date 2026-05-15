@@ -36,3 +36,10 @@ Required inputs:
 Wallet resolution order:
 1. PR body line like `RTC Wallet: your_wallet_name`
 2. `.rtc-wallet` file in the repository root (first non-empty, non-comment line)
+
+Caller workflow should grant permission to create PR comments:
+
+```yaml
+permissions:
+  pull-requests: write
+```
