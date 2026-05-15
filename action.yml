@@ -29,4 +29,4 @@ runs:
         INPUT_ADMIN_KEY: ${{ inputs.admin-key }}
         INPUT_DRY_RUN: ${{ inputs.dry-run }}
         GITHUB_TOKEN: ${{ github.token }}
-      run: python "$GITHUB_ACTION_PATH/rtc_award_action/main.py"
+      run: python $GITHUB_ACTION_PATH/rtc_award_action/main.py

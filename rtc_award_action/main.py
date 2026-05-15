@@ -81,8 +81,14 @@ def transfer_rtc(node_url: str, wallet_from: str, wallet_to: str, amount: str, a
         method="POST",
         headers={"Content-Type": "application/json"},
     )
-    with urllib.request.urlopen(req) as response:
-        return response.status, response.read().decode("utf-8")
+    try:
+        with urllib.request.urlopen(req) as response:
+            return response.status, response.read().decode("utf-8")
+    except urllib.error.HTTPError as err:
+        error_text = err.read().decode("utf-8", errors="replace")[:MAX_TEXT_PREVIEW]
+        raise RuntimeError(f"RTC transfer failed with HTTP {err.code}: {error_text}") from err
+    except urllib.error.URLError as err:
+        raise RuntimeError(f"RTC transfer failed with network error: {err.reason}") from err
 
 
 def main() -> int:
@@ -141,21 +147,12 @@ def main() -> int:
         post_pr_comment(repository, int(pr_number), github_token, message)
         print(f"Transfer response status={status}, body={body[:MAX_TEXT_PREVIEW]}")
         return 0
-    except urllib.error.HTTPError as err:
-        error_text = err.read().decode("utf-8", errors="replace")[:MAX_TEXT_PREVIEW]
+    except RuntimeError as err:
         failure_message = (
-            f"❌ RTC reward transfer failed for `{wallet_to}`: HTTP {err.code}. "
-            f"Please check node availability and credentials."
+            f"❌ RTC reward transfer failed for `{wallet_to}`: {err}."
         )
         post_pr_comment(repository, int(pr_number), github_token, failure_message)
-        print(f"Transfer failed HTTP {err.code}: {error_text}")
-        raise
-    except urllib.error.URLError as err:
-        failure_message = (
-            f"❌ RTC reward transfer failed for `{wallet_to}` due to network error: {err.reason}."
-        )
-        post_pr_comment(repository, int(pr_number), github_token, failure_message)
-        print(f"Transfer failed with network error: {err.reason}")
+        print(f"Transfer failed: {err}")
         raise
 
 

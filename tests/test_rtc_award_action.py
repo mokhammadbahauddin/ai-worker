@@ -1,8 +1,9 @@
 import unittest
 import urllib.error
+from io import BytesIO
 from unittest.mock import patch
 
-from rtc_award_action.main import find_wallet_in_pr_body, github_api_request, parse_bool, read_wallet_file
+from rtc_award_action.main import find_wallet_in_pr_body, github_api_request, parse_bool, read_wallet_file, transfer_rtc
 
 
 class TestRtcAwardAction(unittest.TestCase):
@@ -56,6 +57,23 @@ class TestRtcAwardAction(unittest.TestCase):
         with patch("rtc_award_action.main.urllib.request.urlopen", side_effect=urllib.error.URLError("dns error")):
             with self.assertRaises(RuntimeError):
                 github_api_request("https://api.github.test", "token", {"body": "message"})
+
+    def test_transfer_rtc_wraps_http_errors(self):
+        err = urllib.error.HTTPError(
+            url="https://node.example/api/transfer",
+            code=500,
+            msg="Server Error",
+            hdrs=None,
+            fp=BytesIO(b"boom"),
+        )
+        with patch("rtc_award_action.main.urllib.request.urlopen", side_effect=err):
+            with self.assertRaises(RuntimeError):
+                transfer_rtc("https://node.example", "from_wallet", "to_wallet", "20", "key")
+
+    def test_transfer_rtc_wraps_network_errors(self):
+        with patch("rtc_award_action.main.urllib.request.urlopen", side_effect=urllib.error.URLError("timeout")):
+            with self.assertRaises(RuntimeError):
+                transfer_rtc("https://node.example", "from_wallet", "to_wallet", "20", "key")
 
 
 if __name__ == "__main__":
