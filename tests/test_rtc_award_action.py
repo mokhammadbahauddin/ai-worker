@@ -1,7 +1,8 @@
 import unittest
+import urllib.error
 from unittest.mock import patch
 
-from rtc_award_action.main import find_wallet_in_pr_body, parse_bool, read_wallet_file
+from rtc_award_action.main import find_wallet_in_pr_body, github_api_request, parse_bool, read_wallet_file
 
 
 class TestRtcAwardAction(unittest.TestCase):
@@ -50,6 +51,11 @@ class TestRtcAwardAction(unittest.TestCase):
 
             result = read_wallet_file("/workspace")
             self.assertIsNone(result)
+
+    def test_github_api_request_wraps_network_errors(self):
+        with patch("rtc_award_action.main.urllib.request.urlopen", side_effect=urllib.error.URLError("dns error")):
+            with self.assertRaises(RuntimeError):
+                github_api_request("https://api.github.test", "token", {"body": "message"})
 
 
 if __name__ == "__main__":

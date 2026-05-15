@@ -6,6 +6,8 @@ import urllib.request
 from pathlib import Path
 
 
+MAX_TEXT_PREVIEW = 500
+
 WALLET_BODY_PATTERNS = [
     re.compile(r"^\s*(?:rtc[-_ ]wallet|wallet)\s*[:=]\s*`?([A-Za-z0-9_.-]+)`?\s*$", re.IGNORECASE | re.MULTILINE),
     re.compile(r"^\s*(?:wallet[-_ ]name|recipient[-_ ]wallet)\s*[:=]\s*`?([A-Za-z0-9_.-]+)`?\s*$", re.IGNORECASE | re.MULTILINE),
@@ -53,8 +55,10 @@ def github_api_request(url: str, token: str, payload: dict) -> tuple[int, str]:
         with urllib.request.urlopen(req) as response:
             return response.status, response.read().decode("utf-8")
     except urllib.error.HTTPError as err:
-        error_text = err.read().decode("utf-8", errors="replace")[:500]
+        error_text = err.read().decode("utf-8", errors="replace")[:MAX_TEXT_PREVIEW]
         raise RuntimeError(f"GitHub API request failed with HTTP {err.code}: {error_text}") from err
+    except urllib.error.URLError as err:
+        raise RuntimeError(f"GitHub API request failed with network error: {err.reason}") from err
 
 
 def post_pr_comment(repo: str, issue_number: int, token: str, message: str) -> None:
@@ -135,10 +139,10 @@ def main() -> int:
             f"to `{wallet_to}` (status: {status})."
         )
         post_pr_comment(repository, int(pr_number), github_token, message)
-        print(f"Transfer response status={status}, body={body[:500]}")
+        print(f"Transfer response status={status}, body={body[:MAX_TEXT_PREVIEW]}")
         return 0
     except urllib.error.HTTPError as err:
-        error_text = err.read().decode("utf-8", errors="replace")[:500]
+        error_text = err.read().decode("utf-8", errors="replace")[:MAX_TEXT_PREVIEW]
         failure_message = (
             f"❌ RTC reward transfer failed for `{wallet_to}`: HTTP {err.code}. "
             f"Please check node availability and credentials."
