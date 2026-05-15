@@ -21,3 +21,18 @@ python scraper.py
 The script will fetch the latest jobs from several RSS feeds, filter them based on keywords (like "script", "bot", "data", "simple", "scrape", "api"), and print the matches to the console.
 
 It will also save the found jobs to a `jobs.json` file in the same directory.
+
+## Reusable GitHub Action: Award RTC on Merged PRs
+
+This repository also provides a reusable GitHub Action at `action.yml` that awards RTC when a pull request is merged.
+
+Required inputs:
+- `node-url`
+- `amount`
+- `wallet-from`
+- `admin-key`
+- `dry-run` (optional, default `false`)
+
+Wallet resolution order:
+1. PR body line like `RTC Wallet: your_wallet_name`
+2. `.rtc-wallet` file in the repository root (first non-empty, non-comment line)
